@@ -1,0 +1,134 @@
+<body>
+    <h1>Tree</h1>
+    <strong>Please note that for larger depth number, the resulting tree will be plotted in large dimentions.
+        We recommed zooming out as necessary to get the desired panoramic view of the tree</strong>
+    <div class="tree center">
+        <canvas id='my-canvas' width="100" height="100">
+            Your browser doesnot support canvas
+        </canvas>
+    </div>
+
+    <script>
+
+        // Desired depth of tree must be a random number between 1 & 10
+        var desired_depth = Math.ceil(Math.random() * 10);
+
+        while (desired_depth == 10) {
+            var decision = confirm('The depth of the tree is 10,this will likely cause a problem in ' +
+                'rendering due to the big number of required calculations. If it\'s the ' +
+                'case click on \'OK\' so that a new random number will be set to tree depth');
+
+            if (decision) desired_depth = Math.ceil(Math.random() * 10);
+            else break;
+        }
+
+        const MAXIMUM_CANVAS_LENGTH = 32767;
+
+        const R = 10;
+        const U = 15;
+        const V = 20;
+
+
+        var c = document.getElementById('my-canvas');
+        var ctx = c.getContext('2d');
+
+        const width = Math.pow(2, desired_depth) * U;
+        const height = 2 * width;
+
+        // Adjusting canvas width and height depending on the area occupied by the tree 
+        ctx.canvas.width = width;
+        ctx.canvas.height = height;
+
+        // filling the binary tree
+        var root = fill_children(root, desired_depth);
+
+        // drawing root circle
+        ctx.beginPath();
+        ctx.arc(width / 2, 20, R, 0, 2 * Math.PI);
+        ctx.stroke();
+        ctx.strokeText(width / 2 + 5, 20, root.data);
+        ctx.closePath();
+
+        plotTreeChunk(width / 2, 20, 1, root);
+
+
+        function fill_children(r, n) {
+            if (n === 0) return r;
+            else {
+                r = {
+                    data: null,
+                    right: null,
+                    left: null
+                };
+
+                r.data = Math.ceil(Math.random() * 10);
+                r.left = fill_children(r.left, n - 1);
+                r.right = fill_children(r.right, n - 1);
+
+                return r;
+            }
+        }
+
+        function plotTreeChunk(xr, yr, i, root) {
+
+            if (i == desired_depth) return;
+
+            ctx.fillText(root.data, xr - 3, yr + 5);
+
+            wi = calculateWi(i);
+            hi = calculateHi(i);
+
+            const X_center_child_left = xr - wi;
+            const X_center_child_right = xr + wi;
+            const Y_center_child = yr + hi;
+
+            const X_line_left_start = xr - R * Math.sin(Math.PI / 4);
+            const Y_line_left_start = yr + R * Math.cos(Math.PI / 4);
+            const X_line_left_end = X_center_child_left + R * Math.sin(Math.PI / 4);
+            const Y_line_left_end = Y_center_child - R * Math.cos(Math.PI / 4);
+
+            const X_line_right_start = xr + R * Math.sin(Math.PI / 4);
+            const Y_line_right_start = yr + R * Math.cos(Math.PI / 4);
+            const X_line_right_end = X_center_child_right - R * Math.sin(Math.PI / 4);
+            const Y_line_right_end = Y_center_child - R * Math.cos(Math.PI / 4);
+
+            drawLine(X_line_left_start, Y_line_left_start, X_line_left_end, Y_line_left_end);
+            drawLine(X_line_right_start, Y_line_right_start, X_line_right_end, Y_line_right_end);
+
+            drawCircle(X_center_child_left, Y_center_child, R);
+            drawCircle(X_center_child_right, Y_center_child, R);
+
+            if (i == (desired_depth - 1)) {
+                ctx.fillText(root.left.data, X_center_child_left - 3, Y_center_child + 3);
+                ctx.fillText(root.right.data, X_center_child_right - 3, Y_center_child + 3);
+            }
+
+            plotTreeChunk(X_center_child_left, Y_center_child, i + 1, root.left);
+            plotTreeChunk(X_center_child_right, Y_center_child, i + 1, root.right);
+        }
+
+        function calculateWi(i) {
+            return Math.pow(2, desired_depth - i - 1) * U;
+        }
+
+        function calculateHi(i) {
+            return Math.pow(2, desired_depth - i) * U;
+        }
+
+        function drawLine(x1, y1, x2, y2) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+        }
+
+        function drawCircle(xc, yc, r, number) {
+            ctx.beginPath();
+            ctx.arc(xc, yc, r, 0, 2 * Math.PI);
+            ctx.stroke();
+            ctx.closePath();
+        }
+
+
+    </script>
+</body>
